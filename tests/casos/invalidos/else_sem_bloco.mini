@@ -1,0 +1,2 @@
+// ERRO: 2:20: erro sintático: esperado '{', encontrado 'print'
+if (true) { } else print(1);

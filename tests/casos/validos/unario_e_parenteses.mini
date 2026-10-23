@@ -1,0 +1,4 @@
+// menos unário encadeado e parênteses aninhados
+var x: int = - -5;
+var y: int = -(x + 1) * ((2));
+print(-y);

@@ -1,0 +1,2 @@
+// ERRO: 2:7: erro sintático: esperado ':'
+var x int = 1;

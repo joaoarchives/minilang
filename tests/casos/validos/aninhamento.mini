@@ -1,0 +1,6 @@
+// if dentro de while
+var i: int = 0;
+while (i < 3) {
+  if (i == 1) { print(i); }
+  i = i + 1;
+}

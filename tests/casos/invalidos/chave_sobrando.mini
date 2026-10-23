@@ -1,0 +1,3 @@
+// ERRO: 3:1: erro sintático: comando inesperado, encontrado '}'
+var x: int = 1;
+}

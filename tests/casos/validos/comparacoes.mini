@@ -1,0 +1,10 @@
+// todos os operadores de comparação
+var a: int = 1;
+var b: int = 2;
+var r: bool = a == b;
+r = a != b;
+r = a < b;
+r = a > b;
+r = a <= b;
+r = a >= b;
+r = true == false;

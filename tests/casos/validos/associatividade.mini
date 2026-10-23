@@ -1,0 +1,4 @@
+// associatividade à esquerda
+var x: int = 10 - 3 - 2;
+var y: int = 100 / 10 / 5;
+var z: int = 2 * 3 / 2 * 4;

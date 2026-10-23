@@ -1,0 +1,2 @@
+// ERRO: 2:21: erro sintático: esperado ';', encontrado '<'
+var b: bool = 1 < 2 < 3;

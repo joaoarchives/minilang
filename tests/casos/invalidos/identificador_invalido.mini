@@ -1,0 +1,2 @@
+// ERRO: 2:5: erro sintático: esperado identificador
+var 1x: int = 0;

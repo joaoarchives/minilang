@@ -1,0 +1,2 @@
+// ERRO: 2:1: erro sintático: comando inesperado
+1 = x;

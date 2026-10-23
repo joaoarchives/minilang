@@ -1,0 +1,2 @@
+// ERRO: 3:1: erro sintático: esperado ';', encontrado 'EOF'
+print(x)

@@ -1,0 +1,2 @@
+// tokens colados
+var x:int=1;while(x<=10){x=x*2;}if(x>=10){print(x);}else{print(0);}

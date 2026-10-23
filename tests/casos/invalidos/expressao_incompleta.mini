@@ -1,0 +1,2 @@
+// ERRO: 2:9: erro sintático: expressão esperada
+x = 1 + ;

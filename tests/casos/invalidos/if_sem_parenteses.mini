@@ -1,0 +1,2 @@
+// ERRO: 2:4: erro sintático: esperado '('
+if x > 1 { }

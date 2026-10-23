@@ -1,0 +1,2 @@
+// ERRO: 3:1: erro sintático: esperado '}', encontrado 'EOF'
+while (x) { x = x - 1;

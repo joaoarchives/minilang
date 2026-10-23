@@ -1,0 +1,5 @@
+// declarações de int e bool
+var a: int = 10;
+var b: bool = true;
+var c: bool = false;
+var d: int = a;
