@@ -1,0 +1,12 @@
+// escopos aninhados e sombreamento
+var x: int = 1;
+{
+  var y: int = 2;
+  {
+    var x: bool = true;   // sombreia o x global
+    print(x);             // true
+    print(y);             // 2
+  }
+  print(x + y);           // 3: aqui x volta a ser o int global
+}
+print(x);                 // 1

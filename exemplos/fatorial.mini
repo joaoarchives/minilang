@@ -1,0 +1,12 @@
+// fatorial de 5
+var n: int = 5;
+var f: int = 1;
+while (n > 0) {
+  f = f * n;
+  n = n - 1;
+}
+if (f > 100) {
+  print(f);
+} else {
+  print(0);
+}

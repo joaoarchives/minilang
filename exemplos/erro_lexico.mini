@@ -1,0 +1,4 @@
+// ERRO: 2:7: erro léxico: caractere inválido '@'
+var x @ int = 1;
+var y: int = 2;
+print(x + y);

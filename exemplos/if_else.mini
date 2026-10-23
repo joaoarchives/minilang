@@ -1,0 +1,12 @@
+// maior de dois números, com if/else e if sem else
+var a: int = 7;
+var b: int = 12;
+var a_maior: bool = a > b;
+if (a_maior) {
+  print(a);
+} else {
+  print(b);
+}
+if (a == 7) {
+  print(true);
+}
