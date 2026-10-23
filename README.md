@@ -25,7 +25,49 @@ Na raiz do repositório:
 python -m minilang exemplos/fatorial.mini
 ```
 
-Na versão `v0.0-spec`, o programa só lê o arquivo e imprime o conteúdo dele.
+| Opção | O que faz |
+|---|---|
+| *(nenhuma)* | roda as fases prontas; por enquanto, imprime o fonte se não houver erro |
+| `--tokens` | imprime os tokens no formato `linha:coluna  TIPO  'lexema'` |
+
+```
+$ python -m minilang exemplos/fatorial.mini --tokens
+2:1   VAR          'var'
+2:5   ID           'n'
+2:6   DOIS_PONTOS  ':'
+...
+```
+
+Se houver erros léxicos, **todos** são impressos em `stderr` e o processo
+termina com código de saída `1`:
+
+```
+$ python -m minilang exemplos/erro_lexico.mini
+3:7: erro léxico: caractere inválido '@'
+5:18: erro léxico: caractere inválido '$'
+```
+
+## Testes
+
+```bash
+pip install pytest
+python -m pytest -q
+```
+
+## Decisões e observações
+
+- **Erros léxicos (desafio de 28/08).** Na primeira versão do lexer (commit
+  "lexer inicial"), rodar `x @ y` interrompia a análise com uma exceção no
+  primeiro caractere inválido. Desde `v0.1-lexer`, o lexer usa recuperação em
+  modo pânico: registra a mensagem, descarta o caractere e continua, e assim o
+  programador vê todos os erros de uma vez.
+- **Identificadores só em ASCII.** `ação` não é um identificador válido: `ç` e
+  `ã` geram erro léxico, conforme `[a-zA-Z_][a-zA-Z0-9_]*`.
+- **`!` sozinho é inválido.** Só `!=` existe no núcleo da linguagem.
+- **`12ab`** vira `NUM 12` seguido de `ID ab` (maior casamento). Quem recusa
+  esse trecho é o parser, porque dois tokens não podem aparecer em sequência ali.
+- A análise do scanner do jlox, que inspirou a recuperação de erros, está em
+  [`docs/analise-lexer.md`](docs/analise-lexer.md).
 
 ## Estrutura
 
@@ -47,7 +89,8 @@ minilang/                  # raiz do repositório
 ├── exemplos/              # programas .mini
 ├── docs/
 │   ├── especificacao.md
-│   └── gramatica.md
+│   ├── gramatica.md
+│   └── analise-lexer.md
 └── README.md
 ```
 
@@ -66,7 +109,7 @@ minilang/                  # raiz do repositório
 | Tag | Etapa | Situação |
 |---|---|---|
 | `v0.0-spec` | Especificação, gramática inicial e módulos | ✅ |
-| `v0.1-lexer` | Analisador léxico com erros léxicos | ⏳ |
+| `v0.1-lexer` | Analisador léxico com erros léxicos | ✅ |
 | `v0.2-checkpoint` | Parser e AST | ⏳ |
 | `v0.3-semantica` | Tabela de símbolos e análise semântica | ⏳ |
 | `v0.4-vm` | Geração de TAC e máquina virtual | ⏳ |

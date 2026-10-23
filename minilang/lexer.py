@@ -4,10 +4,6 @@ from .tokens import (OPERADORES_DUPLOS, OPERADORES_SIMPLES, RESERVADAS,
                      TipoToken as T, Token)
 
 
-class ErroLexico(Exception):
-    pass
-
-
 def eh_letra(c):
     return ("a" <= c <= "z") or ("A" <= c <= "Z") or c == "_"
 
@@ -22,6 +18,7 @@ class Lexer:
         self.pos = 0
         self.linha = 1
         self.coluna = 1
+        self.erros = []         # mensagens de erro léxico, na ordem
 
     # --- utilitários -------------------------------------------------
 
@@ -88,12 +85,18 @@ class Lexer:
             self.avancar()
             return Token(OPERADORES_SIMPLES[c], c, lin, col)
 
-        raise ErroLexico(f"{lin}:{col}: erro léxico: caractere inválido '{c}'")
+        # nenhum padrão casou: recuperação em modo pânico
+        self.avancar()                             # descarta o caractere
+        self.erros.append(
+            f"{lin}:{col}: erro léxico: caractere inválido '{c}'")
+        return None                                # tokens() ignora e segue
 
     def tokens(self):
         lista = []
         while True:
             tok = self.proximo_token()
+            if tok is None:
+                continue
             lista.append(tok)
             if tok.tipo == T.EOF:
                 return lista

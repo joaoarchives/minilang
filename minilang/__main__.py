@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-from .lexer import ErroLexico, Lexer
+from .lexer import Lexer
 
 
 def imprimir_tokens(tokens):
@@ -25,10 +25,11 @@ def main():
     with open(args.arquivo, encoding="utf-8") as f:
         fonte = f.read()
 
-    try:
-        tokens = Lexer(fonte).tokens()
-    except ErroLexico as e:
-        print(e, file=sys.stderr)
+    lexer = Lexer(fonte)
+    tokens = lexer.tokens()
+    if lexer.erros:                 # todos os erros de uma vez, em stderr
+        for msg in lexer.erros:
+            print(msg, file=sys.stderr)
         sys.exit(1)
 
     if args.tokens:

@@ -1,4 +1,6 @@
-// ERRO: 2:7: erro léxico: caractere inválido '@'
+// ERRO: 3:7: erro léxico: caractere inválido '@'
+// ERRO: 5:18: erro léxico: caractere inválido '$'
 var x @ int = 1;
 var y: int = 2;
-print(x + y);
+var total: int = $x + y;
+print(total);

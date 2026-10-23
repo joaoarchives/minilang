@@ -77,3 +77,48 @@ def test_entrada_vazia_gera_so_eof():
     toks = Lexer("").tokens()
     assert [t.tipo for t in toks] == [T.EOF]
     assert (toks[0].linha, toks[0].coluna) == (1, 1)
+
+
+# --- erros léxicos (recuperação em modo pânico) -----------------------
+
+def test_sem_erros_em_programa_valido():
+    lx = Lexer("var x: int = 1; print(x);")
+    lx.tokens()
+    assert lx.erros == []
+
+
+def test_erro_lexico_continua():
+    lx = Lexer("x @ y")
+    assert [t.tipo for t in lx.tokens()] == [T.ID, T.ID, T.EOF]
+    assert lx.erros == [
+        "1:3: erro léxico: caractere inválido '@'"]
+
+
+def test_todos_os_erros_com_posicao():
+    lx = Lexer("var a: int = 1;\nprint(a $ 2);\n# fim")
+    lx.tokens()
+    assert lx.erros == [
+        "2:9: erro léxico: caractere inválido '$'",
+        "3:1: erro léxico: caractere inválido '#'"]
+
+
+def test_exclamacao_sozinha_e_invalida():
+    lx = Lexer("a != b ! c")
+    assert [t.tipo for t in lx.tokens()][:-1] == [
+        T.ID, T.DIFERENTE, T.ID, T.ID]
+    assert lx.erros == ["1:8: erro léxico: caractere inválido '!'"]
+
+
+def test_letra_acentuada_e_invalida():
+    lx = Lexer("ação")
+    assert [t.lexema for t in lx.tokens()][:-1] == ["a", "o"]
+    assert lx.erros == [
+        "1:2: erro léxico: caractere inválido 'ç'",
+        "1:3: erro léxico: caractere inválido 'ã'"]
+
+
+def test_erros_seguidos_nao_param_o_lexer():
+    lx = Lexer("@@@x")
+    toks = lx.tokens()
+    assert [(t.tipo, t.coluna) for t in toks] == [(T.ID, 4), (T.EOF, 5)]
+    assert len(lx.erros) == 3
