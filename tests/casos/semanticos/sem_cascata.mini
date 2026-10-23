@@ -1,0 +1,2 @@
+// ERRO: linha 2: erro semântico: 'z' não foi declarada
+print(z + 1 + 2);

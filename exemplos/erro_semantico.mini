@@ -1,0 +1,6 @@
+// ERRO: linha 5: erro semântico: 'b' é bool, mas recebe int
+// ERRO: linha 6: erro semântico: condição deve ser bool, encontrado int
+// ERRO: linha 6: erro semântico: 'y' não foi declarada
+var x: int = 1;
+var b: bool = x + 1;
+if (x) { y = 2; }

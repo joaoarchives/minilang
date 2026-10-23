@@ -1,0 +1,11 @@
+// sombreamento e uso do nome externo na inicialização
+var x: int = 1;
+{
+  var x: int = x + 1;     // o x da direita é o externo
+  {
+    var x: bool = x == 2; // e aqui, o do bloco acima
+    print(x);
+  }
+  print(x);
+}
+x = x * 10;

@@ -1,0 +1,2 @@
+// ERRO: linha 2: erro semântico: 'x' não foi declarada
+x = 1;

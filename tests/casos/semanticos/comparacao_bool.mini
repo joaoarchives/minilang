@@ -1,0 +1,2 @@
+// ERRO: linha 2: erro semântico: operador '<' inválido para bool e bool
+print(true < false);

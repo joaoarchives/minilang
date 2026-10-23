@@ -1,0 +1,4 @@
+// ERRO: linha 4: erro semântico: 'x' é bool, mas recebe int
+var x: int = 1;
+{ var x: bool = true;
+  x = 2; }

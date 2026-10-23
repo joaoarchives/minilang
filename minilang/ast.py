@@ -15,28 +15,35 @@ class No:
 # --- expressões --------------------------------------------------------
 
 @dataclass
-class Num(No):
+class Expr(No):
+    # tipo calculado pela análise semântica ('int' | 'bool'); None até lá
+    tipo: Optional[str] = field(default=None, kw_only=True,
+                                repr=False, compare=False)
+
+
+@dataclass
+class Num(Expr):
     valor: int
 
 
 @dataclass
-class Bool(No):
+class Bool(Expr):
     valor: bool
 
 
 @dataclass
-class Var(No):
+class Var(Expr):
     nome: str
 
 
 @dataclass
-class Unario(No):
+class Unario(Expr):
     op: str
     expr: No
 
 
 @dataclass
-class Binario(No):
+class Binario(Expr):
     op: str
     esq: No
     dir: No

@@ -1,0 +1,2 @@
+// ERRO: linha 2: erro semântico: condição deve ser bool, encontrado int
+if (1) { }

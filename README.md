@@ -6,7 +6,7 @@ aula prática, e vai cobrir o pipeline completo de compilação:
 
 ```
 fonte .mini → léxico → sintático → AST → semântico → TAC → otimizador → VM
-              ✅        ✅          ✅     ⏳          ⏳     ⏳           ⏳
+              ✅        ✅          ✅     ✅          ⏳     ⏳           ⏳
 ```
 
 ## A linguagem
@@ -54,7 +54,7 @@ python -m minilang <arquivo.mini> [--tokens] [--ast]
 
 | Opção | O que faz |
 |---|---|
-| *(nenhuma)* | roda as fases prontas (léxica e sintática); sem erros, não imprime nada e sai com `0` |
+| *(nenhuma)* | roda as fases prontas (léxica, sintática e semântica); sem erros, não imprime nada e sai com `0` |
 | `--tokens` | imprime os tokens no formato `linha:coluna  TIPO  'lexema'` |
 | `--ast` | imprime a árvore sintática abstrata indentada, um nó por linha |
 
@@ -119,10 +119,17 @@ $ python -m minilang exemplos/erro_lexico.mini
 
 $ python -m minilang exemplos/erro_sintatico.mini
 3:1: erro sintático: esperado ';', encontrado 'print'
+
+$ python -m minilang exemplos/erro_semantico.mini
+linha 5: erro semântico: 'b' é bool, mas recebe int
+linha 6: erro semântico: condição deve ser bool, encontrado int
+linha 6: erro semântico: 'y' não foi declarada
 ```
 
 - O **lexer** reporta **todos** os erros de uma vez (recuperação em modo
   pânico).
+- O **analisador semântico** também reporta todos, **sem erros em cascata**:
+  em `print(z + 1 + 2);` com `z` não declarada, sai um único erro, e não três.
 - O **parser** para no primeiro erro. No exemplo, o `;` faltou no fim da linha
   2, mas o parser só percebe a falta ao ver o próximo token (`print`, na linha
   3). GCC e Clang fazem o mesmo.
@@ -134,14 +141,24 @@ python -m pytest -q
 ```
 
 ```
-59 passed
+115 passed
 ```
 
 | Arquivo | O que testa |
 |---|---|
 | `tests/test_lexer.py` | tokens, reservadas × identificadores, maior casamento, posições, comentários e 6 casos de erro léxico |
 | `tests/test_parser.py` | precedência, associatividade, `-` unário, comandos, linha nos nós, erros e a impressão do `--ast` |
-| `tests/test_casos.py` | banco de casos: todo arquivo em `tests/casos/validos/` precisa gerar AST; todo arquivo em `tests/casos/invalidos/` precisa falhar com a mensagem da 1ª linha (`// ERRO: ...`) |
+| `tests/test_simbolos.py` | tabela de símbolos isolada (escopos, sombreamento, redeclaração) e o uso de nomes sobre a AST |
+| `tests/test_semantica.py` | tabela de tipos de todos os operadores, regras dos comandos, ausência de cascata e anotação `no.tipo` |
+| `tests/test_casos.py` | banco de casos, descrito abaixo |
+
+O banco de casos em `tests/casos/` funciona assim:
+
+| Pasta | Exigência |
+|---|---|
+| `validos/` (12) | gerar AST e passar pela análise semântica sem erros |
+| `invalidos/` (12) | falhar no parser com a mensagem da 1ª linha (`// ERRO: ...`) |
+| `semanticos/` (16) | passar no parser e produzir **exatamente** a lista de erros semânticos anotada nas linhas `// ERRO: ...` do início do arquivo |
 
 Para incluir um caso novo no banco, basta criar um arquivo `.mini` na pasta
 certa, sem mexer no código dos testes.
@@ -155,20 +172,23 @@ minilang/                  # raiz do repositório
 │   ├── __main__.py        # CLI
 │   ├── tokens.py          # tipos de token e reservadas          ✅
 │   ├── lexer.py           # analisador léxico                    ✅
-│   ├── ast.py             # nós da AST e impressão indentada     ✅
+│   ├── ast.py             # nós da AST, Visitor e impressão      ✅
 │   ├── parser.py          # parser recursivo descendente         ✅
-│   ├── simbolos.py        # tabela de símbolos          (09/10)
-│   ├── semantica.py       # analisador semântico        (16/10)
+│   ├── simbolos.py        # tabela de símbolos                   ✅
+│   ├── semantica.py       # análise semântica e tipos            ✅
 │   ├── ir.py              # geração de TAC              (30/10)
 │   ├── vm.py              # máquina virtual             (06/11)
 │   └── otimizador.py      # otimizações sobre o TAC     (13/11)
 ├── tests/
 │   ├── test_lexer.py
 │   ├── test_parser.py
+│   ├── test_simbolos.py
+│   ├── test_semantica.py
 │   ├── test_casos.py
 │   └── casos/
-│       ├── validos/       # 10 programas que devem gerar AST
-│       └── invalidos/     # 12 programas com 1 erro sintático cada
+│       ├── validos/       # 12 programas corretos
+│       ├── invalidos/     # 12 programas com 1 erro sintático cada
+│       └── semanticos/    # 16 programas com erros semânticos anotados
 ├── exemplos/              # programas .mini para a demonstração
 ├── docs/
 │   ├── especificacao.md   # a linguagem
@@ -188,6 +208,7 @@ minilang/                  # raiz do repositório
 | `escopos.mini` | blocos aninhados e sombreamento de variável |
 | `erro_lexico.mini` | dois caracteres inválidos, reportados de uma vez |
 | `erro_sintatico.mini` | falta de `;` |
+| `erro_semantico.mini` | tipo errado, condição `int` e variável não declarada |
 
 ## Decisões de projeto
 
@@ -208,6 +229,19 @@ minilang/                  # raiz do repositório
 - **AST:** todo nó guarda a linha, para as mensagens das fases seguintes. A
   linha não entra na comparação de nós, então os testes comparam árvores
   inteiras.
+- **Visitor com despacho pelo nome da classe** (`visitar_Bloco`,
+  `visitar_Binario`...). Cada fase que percorre a AST é uma classe própria.
+- **Tabela de símbolos como pilha de dicionários.** Cada bloco empilha um
+  escopo. Redeclarar no mesmo escopo é erro; sombrear em escopo interno é
+  permitido.
+- **`var x: int = x + 1;`:** a expressão é analisada **antes** de `x` ser
+  declarada, então o `x` da direita é o de um escopo externo, ou erro.
+- **Sem erros em cascata.** Cada expressão devolve seu tipo ou `None`, e
+  `None` significa que o erro já foi reportado. Uma variável declarada com tipo
+  errado entra na tabela mesmo assim, para que os usos seguintes não gerem
+  "não foi declarada".
+- **AST anotada:** toda expressão válida recebe `no.tipo` (`'int'` ou
+  `'bool'`), que a geração de código vai usar.
 
 ## Etapas
 
@@ -216,6 +250,6 @@ minilang/                  # raiz do repositório
 | `v0.0-spec` | 21/08 | Especificação, gramática inicial e módulos | ✅ |
 | `v0.1-lexer` | 28/08 e 04/09 | Analisador léxico com recuperação de erros | ✅ |
 | `v0.2-checkpoint` | 11/09 a 25/09 | Gramática, parser, AST e checkpoint | ✅ |
-| `v0.3-semantica` | 09/10 e 16/10 | Tabela de símbolos e análise semântica | ⏳ |
+| `v0.3-semantica` | 09/10 e 16/10 | Tabela de símbolos e análise semântica | ✅ |
 | `v0.4-vm` | 30/10 e 06/11 | Geração de TAC e máquina virtual | ⏳ |
 | `v0.5-otimizacao` | 13/11 | Otimizações sobre o TAC | ⏳ |

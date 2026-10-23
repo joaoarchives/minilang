@@ -1,0 +1,2 @@
+// ERRO: linha 2: erro semântico: 'b' é bool, mas recebe int
+var b: bool = 1 + 2;

@@ -1,0 +1,7 @@
+// expressões bool em condições, atribuições e igualdade
+var a: bool = true;
+var b: bool = 1 < 2;
+var c: bool = a == b;
+c = a != (3 >= 4);
+while (c) { c = false; }
+if (a == true) { print(a); }
