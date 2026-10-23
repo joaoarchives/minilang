@@ -6,7 +6,7 @@ aula prática, e vai cobrir o pipeline completo de compilação:
 
 ```
 fonte .mini → léxico → sintático → AST → semântico → TAC → otimizador → VM
-              ✅        ✅          ✅     ✅          ⏳     ⏳           ⏳
+              ✅        ✅          ✅     ✅          ✅     ⏳           ⏳
 ```
 
 ## A linguagem
@@ -49,14 +49,15 @@ python -m pip install pytest
 Na raiz do repositório:
 
 ```bash
-python -m minilang <arquivo.mini> [--tokens] [--ast]
+python -m minilang <arquivo.mini> [--tokens] [--ast] [--tac]
 ```
 
 | Opção | O que faz |
 |---|---|
-| *(nenhuma)* | roda as fases prontas (léxica, sintática e semântica); sem erros, não imprime nada e sai com `0` |
+| *(nenhuma)* | roda as fases prontas (léxica, sintática, semântica e geração de TAC); sem erros, não imprime nada e sai com `0` |
 | `--tokens` | imprime os tokens no formato `linha:coluna  TIPO  'lexema'` |
 | `--ast` | imprime a árvore sintática abstrata indentada, um nó por linha |
+| `--tac` | imprime o código de três endereços gerado |
 
 ### Tokens
 
@@ -107,6 +108,40 @@ Programa
             └── Num 0
 ```
 
+### TAC (código de três endereços)
+
+```
+$ python -m minilang exemplos/fatorial.mini --tac
+    n = 5
+    f = 1
+L1:
+    t1 = n > 0
+    ifFalse t1 goto L2
+    t2 = f * n
+    f = t2
+    t3 = n - 1
+    n = t3
+    goto L1
+L2:
+    t4 = f > 100
+    ifFalse t4 goto L3
+    print f
+    goto L4
+L3:
+    print 0
+L4:
+```
+
+| Forma | Significado |
+|---|---|
+| `x = y` | cópia (`y` é variável, temporário ou constante) |
+| `t = a op b` | operação binária: `+ - * / < > <= >= == !=` |
+| `t = -a` | operação unária |
+| `goto L` | salto incondicional |
+| `ifFalse t goto L` | salta se `t` for falso |
+| `L:` | rótulo |
+| `print a` | saída |
+
 ### Erros
 
 As mensagens de erro vão para `stderr` e o processo termina com código de saída
@@ -141,7 +176,7 @@ python -m pytest -q
 ```
 
 ```
-115 passed
+145 passed
 ```
 
 | Arquivo | O que testa |
@@ -150,6 +185,7 @@ python -m pytest -q
 | `tests/test_parser.py` | precedência, associatividade, `-` unário, comandos, linha nos nós, erros e a impressão do `--ast` |
 | `tests/test_simbolos.py` | tabela de símbolos isolada (escopos, sombreamento, redeclaração) e o uso de nomes sobre a AST |
 | `tests/test_semantica.py` | tabela de tipos de todos os operadores, regras dos comandos, ausência de cascata e anotação `no.tipo` |
+| `tests/test_ir.py` | TAC gerado comparado como texto (expressões, `if/else`, `if` sem `else`, `while`, fatorial), temporários e rótulos únicos, sombreamento e linha nas instruções |
 | `tests/test_casos.py` | banco de casos, descrito abaixo |
 
 O banco de casos em `tests/casos/` funciona assim:
@@ -176,7 +212,7 @@ minilang/                  # raiz do repositório
 │   ├── parser.py          # parser recursivo descendente         ✅
 │   ├── simbolos.py        # tabela de símbolos                   ✅
 │   ├── semantica.py       # análise semântica e tipos            ✅
-│   ├── ir.py              # geração de TAC              (30/10)
+│   ├── ir.py              # Instr e geração de TAC               ✅
 │   ├── vm.py              # máquina virtual             (06/11)
 │   └── otimizador.py      # otimizações sobre o TAC     (13/11)
 ├── tests/
@@ -184,6 +220,7 @@ minilang/                  # raiz do repositório
 │   ├── test_parser.py
 │   ├── test_simbolos.py
 │   ├── test_semantica.py
+│   ├── test_ir.py
 │   ├── test_casos.py
 │   └── casos/
 │       ├── validos/       # 12 programas corretos
@@ -242,6 +279,18 @@ minilang/                  # raiz do repositório
   "não foi declarada".
 - **AST anotada:** toda expressão válida recebe `no.tipo` (`'int'` ou
   `'bool'`), que a geração de código vai usar.
+- **TAC em pós-ordem:** cada expressão devolve o "endereço" do seu valor.
+  Constantes e variáveis são usadas direto (`n = 5`, `ifFalse ok goto L2`);
+  só operações criam temporários.
+- **`if` sem `else`** usa o mesmo esquema do `if/else` com o `senão` vazio. O
+  `goto` que sobra fica para o otimizador remover.
+- **Sombreamento no TAC.** O TAC tem memória plana, sem escopos. Por isso,
+  cada nova declaração de um nome já usado ganha um sufixo (`x`, `x.2`,
+  `x.3`). Sem isso, o `x` interno de `escopos.mini` sobrescreveria o externo
+  na execução. O `.` não existe em identificadores da MiniLang, então não há
+  colisão.
+- **Temporários não colidem com variáveis.** Se o programa declara `t1`, o
+  gerador pula esse nome e usa o próximo temporário livre.
 
 ## Etapas
 
@@ -251,5 +300,5 @@ minilang/                  # raiz do repositório
 | `v0.1-lexer` | 28/08 e 04/09 | Analisador léxico com recuperação de erros | ✅ |
 | `v0.2-checkpoint` | 11/09 a 25/09 | Gramática, parser, AST e checkpoint | ✅ |
 | `v0.3-semantica` | 09/10 e 16/10 | Tabela de símbolos e análise semântica | ✅ |
-| `v0.4-vm` | 30/10 e 06/11 | Geração de TAC e máquina virtual | ⏳ |
+| `v0.4-vm` | 30/10 e 06/11 | Geração de TAC e máquina virtual | 🔧 TAC pronto; falta a VM |
 | `v0.5-otimizacao` | 13/11 | Otimizações sobre o TAC | ⏳ |
