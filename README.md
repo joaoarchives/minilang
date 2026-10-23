@@ -27,8 +27,9 @@ python -m minilang exemplos/fatorial.mini
 
 | Opção | O que faz |
 |---|---|
-| *(nenhuma)* | roda as fases prontas; por enquanto, imprime o fonte se não houver erro |
+| *(nenhuma)* | roda as fases prontas (léxica e sintática); sem erros, não imprime nada e sai com `0` |
 | `--tokens` | imprime os tokens no formato `linha:coluna  TIPO  'lexema'` |
+| `--ast` | imprime a árvore sintática abstrata indentada, um nó por linha |
 
 ```
 $ python -m minilang exemplos/fatorial.mini --tokens
@@ -38,14 +39,36 @@ $ python -m minilang exemplos/fatorial.mini --tokens
 ...
 ```
 
+```
+$ python -m minilang exemplos/fatorial.mini --ast
+Programa
+├── Decl n: int
+│   └── Num 5
+├── Decl f: int
+│   └── Num 1
+├── While
+│   ├── cond: Binario >
+│   │   ├── Var n
+│   │   └── Num 0
+│   └── corpo: Bloco
+...
+```
+
 Se houver erros léxicos, **todos** são impressos em `stderr` e o processo
-termina com código de saída `1`:
+termina com código de saída `1`. Um erro sintático também termina com código
+`1`, e o parser só roda se não houver erro léxico:
 
 ```
 $ python -m minilang exemplos/erro_lexico.mini
 3:7: erro léxico: caractere inválido '@'
 5:18: erro léxico: caractere inválido '$'
+
+$ python -m minilang exemplos/erro_sintatico.mini
+3:1: erro sintático: esperado ';', encontrado 'print'
 ```
+
+O erro aponta a linha 3 porque o `;` faltou no fim da linha 2, mas o parser
+só percebe a falta ao ver o próximo token (`print`). GCC e Clang fazem o mesmo.
 
 ## Testes
 
@@ -86,6 +109,7 @@ minilang/                  # raiz do repositório
 │   ├── vm.py              # 06/11
 │   └── otimizador.py      # 13/11
 ├── tests/                 # pytest
+│   └── casos/             # programas válidos e inválidos para o parser
 ├── exemplos/              # programas .mini
 ├── docs/
 │   ├── especificacao.md
@@ -110,7 +134,7 @@ minilang/                  # raiz do repositório
 |---|---|---|
 | `v0.0-spec` | Especificação, gramática inicial e módulos | ✅ |
 | `v0.1-lexer` | Analisador léxico com erros léxicos | ✅ |
-| `v0.2-checkpoint` | Parser e AST | ⏳ |
+| `v0.2-checkpoint` | Parser e AST | 🔧 parser pronto; falta o checkpoint |
 | `v0.3-semantica` | Tabela de símbolos e análise semântica | ⏳ |
 | `v0.4-vm` | Geração de TAC e máquina virtual | ⏳ |
 | `v0.5-otimizacao` | Otimizações sobre o TAC | ⏳ |
