@@ -4,6 +4,7 @@ import sys
 from .ast import formatar
 from .lexer import Lexer
 from .parser import ErroSintatico, Parser
+from .semantica import AnalisadorSemantico
 
 
 def imprimir_tokens(tokens):
@@ -45,6 +46,12 @@ def main():
         sys.exit(1)
     if args.ast:
         print(formatar(arvore))
+
+    erros = AnalisadorSemantico().visitar(arvore)
+    if erros:                       # todos os erros semânticos de uma vez
+        for msg in erros:
+            print(msg, file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

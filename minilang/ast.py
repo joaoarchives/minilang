@@ -85,6 +85,20 @@ class Programa(No):
     comandos: List[No]
 
 
+# --- Visitor -----------------------------------------------------------
+
+class Visitor:
+    """Base das fases que percorrem a AST (semântica, geração de TAC, ...).
+
+    visitar(no) despacha pelo nome da classe do nó:
+    Bloco -> visitar_Bloco(no), Binario -> visitar_Binario(no).
+    """
+
+    def visitar(self, no):
+        nome = "visitar_" + type(no).__name__
+        return getattr(self, nome)(no)
+
+
 # --- impressão indentada (--ast) ---------------------------------------
 
 def _rotulo(no):
