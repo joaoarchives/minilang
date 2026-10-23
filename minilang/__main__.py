@@ -1,14 +1,40 @@
+import argparse
 import sys
+
+from .lexer import ErroLexico, Lexer
+
+
+def imprimir_tokens(tokens):
+    for t in tokens:
+        pos = f"{t.linha}:{t.coluna}"
+        print(f"{pos:<6}{t.tipo.name:<13}{t.lexema!r}")
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("uso: python -m minilang arquivo.mini", file=sys.stderr)
-        sys.exit(2)
-    caminho = sys.argv[1]
-    with open(caminho, encoding="utf-8") as f:
+    # acentos corretos nas mensagens, mesmo com saída redirecionada no Windows
+    for fluxo in (sys.stdout, sys.stderr):
+        fluxo.reconfigure(encoding="utf-8")
+
+    ap =argparse.ArgumentParser(prog="python -m minilang",
+                                 description="Compilador da MiniLang")
+    ap.add_argument("arquivo", help="programa .mini")
+    ap.add_argument("--tokens", action="store_true",
+                    help="imprime a lista de tokens")
+    args = ap.parse_args()
+
+    with open(args.arquivo, encoding="utf-8") as f:
         fonte = f.read()
-    print(fonte)            # por enquanto, só ecoa
+
+    try:
+        tokens = Lexer(fonte).tokens()
+    except ErroLexico as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
+
+    if args.tokens:
+        imprimir_tokens(tokens)
+    else:
+        print(fonte)        # fases seguintes ainda não existem
 
 
 if __name__ == "__main__":

@@ -1,0 +1,9 @@
+[project]
+name = "minilang"
+version = "0.1.0"
+description = "Compilador da MiniLang (Compiladores 2026.2, IDP)"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
